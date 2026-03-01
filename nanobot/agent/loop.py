@@ -14,10 +14,12 @@ from loguru import logger
 
 from nanobot.agent.context import ContextBuilder
 from nanobot.agent.memory import MemoryStore
+from nanobot.agent.planner import TaskPlanner
 from nanobot.agent.subagent import SubagentManager
 from nanobot.agent.tools.cron import CronTool
 from nanobot.agent.tools.filesystem import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
 from nanobot.agent.tools.message import MessageTool
+from nanobot.agent.tools.plan import PlanTool
 from nanobot.agent.tools.registry import ToolRegistry
 from nanobot.agent.tools.shell import ExecTool
 from nanobot.agent.tools.spawn import SpawnTool
@@ -86,6 +88,7 @@ class AgentLoop:
         self.context = ContextBuilder(workspace)
         self.sessions = session_manager or SessionManager(workspace)
         self.tools = ToolRegistry()
+        self.planner = TaskPlanner()
         self.subagents = SubagentManager(
             provider=provider,
             workspace=workspace,
@@ -127,6 +130,7 @@ class AgentLoop:
         self.tools.register(WebFetchTool(proxy=self.web_proxy))
         self.tools.register(MessageTool(send_callback=self.bus.publish_outbound))
         self.tools.register(SpawnTool(manager=self.subagents))
+        self.tools.register(PlanTool(planner=self.planner))
         if self.cron_service:
             self.tools.register(CronTool(self.cron_service))
 
